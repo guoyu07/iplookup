@@ -159,6 +159,24 @@ ZEND_METHOD(IplookUp,search_ip)
 
     RETURN_ZVAL(get_location(fp,ip),0,1);
 }
+
+ZEND_METHOD(IpLookUp,__destruct)
+{
+    FILE *fp = NULL;
+    zval *resource;
+    resource = zend_read_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,0 TSRMLS_CC);
+
+    ZEND_FETCH_RESOURCE(fp,FILE *,&resource,-1,"FILE",le_iplookup);
+
+    if( ! fp)
+    {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "file resource not exists!");
+        return;
+    }
+
+    fclose(fp);
+    return;
+}
 /* }}} */
 /* The previous line is meant for vim and emacs, so it can correctly fold and
    unfold functions in source code. See the corresponding marks just before
