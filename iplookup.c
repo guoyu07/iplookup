@@ -35,6 +35,8 @@ ZEND_DECLARE_MODULE_GLOBALS(iplookup)
 /* True global resources - no need for thread safety here */
 static int le_iplookup;
 
+static uint32_t start_index_offset,end_index_offset,total_ip_num;
+
 zend_class_entry *iplookup_ce;
 
 /* {{{ PHP_INI
@@ -96,7 +98,7 @@ ZEND_METHOD(IpLookUp,__construct)
         }
     }
 
-    zend_update_property_string(iplookup_ce,getThis(),"file",sizeof("file")-1,file);
+    zend_update_property_string(iplookup_ce,getThis(),"file",sizeof("file")-1,file TSRMLS_CC);
 
     //打开文件
     fp = VCWD_FOPEN(file,"r");
@@ -113,6 +115,7 @@ ZEND_METHOD(IpLookUp,__construct)
 
     total_ip_num = (start_index_offset - end_index_offset) / INDEX_LENGTH;
 
+    MAKE_STD_ZVAL(resource);
     //保存资源到对象中
     ZEND_REGISTER_RESOURCE(resource,fp,le_iplookup);
     zend_update_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,resource TSRMLS_CC);
@@ -128,10 +131,10 @@ ZEND_METHOD(IpLookUp,total_ip_num)
 
     totalIpNum = zend_read_property(iplookup_ce,getThis(),"totalIpNum",sizeof("totalIpNum")-1,0 TSRMLS_CC);
 
-    RETURN_NULL();
+    //RETURN_NULL();
     //RETVAL_LONG(Z_STRVAL_P(totalIpNum);
     //return;
-    //RETURN_LONG(Z_STRVAL_P(totalIpNum);
+    RETURN_LONG(Z_STRVAL_P(totalIpNum);
 }
 
 ZEND_METHOD(IpLookUp,get_index)
@@ -257,6 +260,12 @@ PHP_MINIT_FUNCTION(iplookup)
 	//注册文件资源
 	le_iplookup = zend_register_list_destructors_ex(NULL,NULL,"FILE",module_number);
 
+	//定义类属性
+	zend_declare_property_null(iplookup_ce,"fp",sizeof("fp")-1,ZEND_ACC_PUBLIC TSRMLS_CC);
+	zend_declare_property_null(iplookup_ce,"file",sizeof("file")-1,ZEND_ACC_PUBLIC TSRMLS_CC);
+	zend_declare_property_long(iplookup_ce,"startIndexOffset",sizeof("startIndexOffset")-1,0,ZEND_ACC_PUBLIC TSRMLS_CC);
+	zend_declare_property_long(iplookup_ce,"endIndexOffset",sizeof("endIndexOffset")-1,0,ZEND_ACC_PUBLIC TSRMLS_CC);
+	zend_declare_property_long(iplookup_ce,"totalIpNum",sizeof("totalIpNum")-1,0,ZEND_ACC_PUBLIC TSRMLS_CC);
 	REGISTER_INI_ENTRIES();
 
 	return SUCCESS;

@@ -94,7 +94,6 @@ int find_location_by_index(FILE *,const uint32_t,char *);
 int is_cz88(const char*);
 zval *get_location(FILE *,const char*);
 
-static uint32_t start_index_offset,end_index_offset,total_ip_num;
 /*
  * Local variables:
  * tab-width: 4
