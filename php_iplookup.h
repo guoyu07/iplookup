@@ -87,11 +87,11 @@ ZEND_END_MODULE_GLOBALS(iplookup)
 #endif	/* PHP_IPLOOKUP_H */
 
 uint32_t get_index_offset(FILE *);
-int update_qqwry_file(const char *)
+int update_qqwry_file(const char *);
 uint32_t ip2long(const char*);
 uint32_t find_index(const uint32_t,FILE *);
 int find_location_by_index(FILE *,const uint32_t,char *);
-int nt is_cz88(const char*);
+int is_cz88(const char*);
 zval *get_location(FILE *,const char*);
 
 static uint32_t start_index_offset,end_index_offset,total_ip_num;
