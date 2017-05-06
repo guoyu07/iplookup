@@ -35,11 +35,11 @@ ZEND_DECLARE_MODULE_GLOBALS(iplookup)
 /* True global resources - no need for thread safety here */
 static int le_iplookup;
 
-zend_class_entry *iploop_ce;
+zend_class_entry *iplookup_ce;
 
 /* {{{ PHP_INI
  */
-Remove comments and fill if you need to have entries in php.ini
+/*Remove comments and fill if you need to have entries in php.ini*/
 PHP_INI_BEGIN()
     STD_PHP_INI_ENTRY("iplookup.qqwry_file",      "", PHP_INI_ALL, OnUpdateString, qqwry_file, zend_iplookup_globals, iplookup_globals)
     //STD_PHP_INI_ENTRY("iplookup.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_iplookup_globals, iplookup_globals)
@@ -96,7 +96,7 @@ ZEND_METHOD(IpLookUp,__construct)
         }
     }
 
-    zend_update_property_string(iploop_ce,getThis(),"file",sizeof("file")-1,file);
+    zend_update_property_string(iplookup_ce,getThis(),"file",sizeof("file")-1,file);
 
     //打开文件
     fp = VCWD_FOPEN(file,"r");
@@ -115,10 +115,10 @@ ZEND_METHOD(IpLookUp,__construct)
 
     //保存资源到对象中
     ZEND_REGISTER_RESOURCE(resource,fp,le_iplookup);
-    zend_update_property(iploop_ce,getThis(),"fp",sizeof("fp")-1,resource TSRMLS_CC);
-    zend_update_property_long(iploop_ce,getThis(),"startIndexOffset",sizeof("startIndexOffset")-1,(long)start_index_offset TSRMLS_CC);
-    zend_update_property_long(iploop_ce,getThis(),"endIndexOffset",sizeof("endIndexOffset")-1,(long)end_index_offset TSRMLS_CC);
-    zend_update_property_long(iploop_ce,getThis(),"totalIpNum",sizeof("totalIpNum")-1,(long)total_ip_num TSRMLS_CC);
+    zend_update_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,resource TSRMLS_CC);
+    zend_update_property_long(iplookup_ce,getThis(),"startIndexOffset",sizeof("startIndexOffset")-1,(long)start_index_offset TSRMLS_CC);
+    zend_update_property_long(iplookup_ce,getThis(),"endIndexOffset",sizeof("endIndexOffset")-1,(long)end_index_offset TSRMLS_CC);
+    zend_update_property_long(iplookup_ce,getThis(),"totalIpNum",sizeof("totalIpNum")-1,(long)total_ip_num TSRMLS_CC);
 	RETURN_NULL();
 }
 
@@ -185,7 +185,7 @@ ZEND_METHOD(IplookUp,search_ip)
 ZEND_METHOD(IpLookUp,update_qqwry_file)
 {
     zval *file;
-    file = zend_read_property(iploop_ce,getThis(),"file",sizeof("file")-1,0);
+    file = zend_read_property(iplookup_ce,getThis(),"file",sizeof("file")-1,0);
 
     RETURN_LONG((long)update_qqwry_file(Z_STRVAL_P(file)));
 }
@@ -249,7 +249,7 @@ PHP_MINIT_FUNCTION(iplookup)
 	*/
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce,"IpLookUp",iplookup_functions);
-	iploop_ce = zend_register_internal_class(&ce TSRMLS_CC);
+	iplookup_ce = zend_register_internal_class(&ce TSRMLS_CC);
 	myclass_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
 	//注册文件资源
