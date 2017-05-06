@@ -253,7 +253,6 @@ PHP_MINIT_FUNCTION(iplookup)
 	zend_class_entry ce;
 	INIT_CLASS_ENTRY(ce,"IpLookUp",iplookup_functions);
 	iplookup_ce = zend_register_internal_class(&ce TSRMLS_CC);
-	myclass_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
 	//注册文件资源
 	le_iplookup = zend_register_list_destructors_ex(NULL,NULL,"FILE",module_number);
