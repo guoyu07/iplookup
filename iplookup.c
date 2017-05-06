@@ -161,7 +161,7 @@ ZEND_METHOD(IpLookUp,get_index)
     RETURN_LONG((long)index);
 }
 
-ZEND_METHOD(IplookUp,search_ip)
+ZEND_METHOD(IpLookUp,search_ip)
 {
     FILE *fp = NULL;
     char *ip;
