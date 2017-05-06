@@ -415,7 +415,7 @@ int find_location_by_index(FILE *fp,const uint32_t data_index,char *location)
         case REDIRECT_TYPE_1:
             num = fread(data_index_bytes,3,1,fp);
             jump_data_index=LE_24(&data_index_bytes[0]);
-            fseek(p,jump_data_index,SEEK_SET);
+            fseek(fp,jump_data_index,SEEK_SET);
             break;
         default:
             location[strlen(location)]=c;
