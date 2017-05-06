@@ -223,6 +223,21 @@ static void php_iplookup_init_globals(zend_iplookup_globals *iplookup_globals)
 	iplookup_globals->qqwry_file = NULL;
 }
 
+/* {{{ iplookup_functions[]
+ *
+ * Every user visible function must have an entry in iplookup_functions[].
+ */
+const zend_function_entry iplookup_functions[] = {
+	ZEND_ME(IpLookUp,__construct,	arginfo_iplookup___construct,ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)		/* For testing, remove later. */
+	ZEND-ME(IpLookUp,total_ip_num,NULL,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,get_index,arginfo_iplookup_get_index,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,search_ip,arginfo_iplookup_search_ip,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,update_qqwry_file,NULL,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,__destruct,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
+	PHP_FE_END	/* Must be the last line in iplookup_functions[] */
+};
+/* }}} */
+
 /* }}} */
 
 /* {{{ PHP_MINIT_FUNCTION
@@ -288,21 +303,6 @@ PHP_MINFO_FUNCTION(iplookup)
 	DISPLAY_INI_ENTRIES();
 	*/
 }
-/* }}} */
-
-/* {{{ iplookup_functions[]
- *
- * Every user visible function must have an entry in iplookup_functions[].
- */
-const zend_function_entry iplookup_functions[] = {
-	ZEND_ME(IpLookUp,__construct,	arginfo_iplookup___construct,ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)		/* For testing, remove later. */
-	ZEND-ME(IpLookUp,total_ip_num,NULL,ZEND_ACC_PUBLIC)
-	ZEND_ME(IpLookUp,get_index,arginfo_iplookup_get_index,ZEND_ACC_PUBLIC)
-	ZEND_ME(IpLookUp,search_ip,arginfo_iplookup_search_ip,ZEND_ACC_PUBLIC)
-	ZEND_ME(IpLookUp,update_qqwry_file,NULL,ZEND_ACC_PUBLIC)
-	ZEND_ME(IpLookUp,__destruct,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
-	PHP_FE_END	/* Must be the last line in iplookup_functions[] */
-};
 /* }}} */
 
 /* {{{ iplookup_module_entry
