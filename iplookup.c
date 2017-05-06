@@ -329,7 +329,7 @@ uint32_t get_index_offset(FILE *fp)
     size_t num;
     num = fread(head,4,1,fp);
 
-    return (uint32_t)LE_32(&head[0])
+    return (uint32_t)LE_32(&head[0]);
 }
 
 uint32_t ip2long(const char *ip) {
