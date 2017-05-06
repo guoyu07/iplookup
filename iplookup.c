@@ -326,10 +326,7 @@ uint32_t get_index_offset(FILE *fp)
     unsigned char head[4];
     size_t num;
     num = fread(head,4,1,fp);
-    if(num < 1)
-    {
-        return NULL;
-    }
+
     return (uint32_t)LE_32(&head[0])
 }
 
