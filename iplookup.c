@@ -324,7 +324,12 @@ zend_module_entry iplookup_module_entry = {
 uint32_t get_index_offset(FILE *fp)
 {
     unsigned char head[4];
-    fread(head,4,1,fp);
+    size_t num;
+    num = fread(head,4,1,fp);
+    if(num < 1)
+    {
+        return NULL;
+    }
     return (uint32_t)LE_32(&head[0])
 }
 
@@ -364,6 +369,7 @@ uint32_t find_index(const uint32_t ip,FILE *fp) {
     uint32_t index_ip;
     unsigned char index_bytes[7];
     uint32_t index_mid;
+    size_t num;
     while (1){
         if ((end_index_offset - start_index_offset) == INDEX_LENGTH) {
             break;
@@ -377,7 +383,7 @@ uint32_t find_index(const uint32_t ip,FILE *fp) {
         }
         index_mid = start_index_offset + index_mid * INDEX_LENGTH;
         fseek(fp,index_mid,SEEK_SET);
-        fread(index_bytes,7,1,fp);
+        num = fread(index_bytes,7,1,fp);
         index_ip=(uint32_t)LE_32(&index_bytes[0]);
         if (index_ip == ip) {
             break;
@@ -389,7 +395,7 @@ uint32_t find_index(const uint32_t ip,FILE *fp) {
     }
     if (index_ip > ip) {
         fseek(fp,start_index_offset,SEEK_SET);
-        fread(index_bytes,INDEX_LENGTH,1,fp);
+        num = fread(index_bytes,INDEX_LENGTH,1,fp);
     }
     return (uint32_t)LE_24(&index_bytes[4]);
 }
@@ -399,6 +405,7 @@ int find_location_by_index(FILE *fp,const uint32_t data_index,char *location)
     unsigned char c;
     unsigned char data_index_bytes[3];
     uint32_t jump_data_index=0;
+    size_t num;
     if (data_index) {
         fseek(fp,data_index,SEEK_SET);
     }
@@ -406,7 +413,7 @@ int find_location_by_index(FILE *fp,const uint32_t data_index,char *location)
     switch (c) {
         case REDIRECT_TYPE_2:
         case REDIRECT_TYPE_1:
-            fread(data_index_bytes,3,1,fp);
+            num = fread(data_index_bytes,3,1,fp);
             jump_data_index=LE_24(&data_index_bytes[0]);
             fseek(p,jump_data_index,SEEK_SET);
             break;
@@ -449,6 +456,7 @@ zval *get_location(FILE *fp,const char * ip)
     uint32_t addr2_offset;
     char country[CHAR_NUM],area[CHAR_NUM];
     unsigned char c;
+    size_t num;
 
     ip_long = ip2long(ip);
     if(result == NULL){
@@ -467,7 +475,7 @@ zval *get_location(FILE *fp,const char * ip)
     fseek(fp,data_index+4,SEEK_SET);
     c = fgetc(fp);
     if (c == REDIRECT_TYPE_1) {
-        fread(data_index_bytes,3,1,fp);
+        num = fread(data_index_bytes,3,1,fp);
         data_index = LE_24(&data_index_bytes[0]);
         fseek(fp,data_index,SEEK_SET);
         c = fgetc(fp);
@@ -481,7 +489,7 @@ zval *get_location(FILE *fp,const char * ip)
          * 这里ip的4个bytes不一定是真的，有可能是上一条注释里提到的情况
          */
         addr2_offset = data_index + 8;
-        fread(data_index_bytes,3,1,fp);
+        num = fread(data_index_bytes,3,1,fp);
 
         data_index = LE_24(&data_index_bytes[0]);
         fseek(fp,data_index,SEEK_SET);
