@@ -124,11 +124,11 @@ ZEND_METHOD(IpLookUp,__construct)
 
 ZEND_METHOD(IpLookUp,total_ip_num)
 {
-    long totalIpNum;
+    zval *totalIpNum;
 
     totalIpNum = zend_read_property(iplookup_ce,getThis(),"totalIpNum",sizeof("totalIpNum")-1,0 TSRMLS_CC);
 
-    RETURN_LONG(totalIpNum);
+    RETURN_LONG(Z_STRVAL_P(totalIpNum);
 }
 
 ZEND_METHOD(IpLookUp,get_index)
