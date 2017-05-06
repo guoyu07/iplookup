@@ -128,8 +128,9 @@ ZEND_METHOD(IpLookUp,total_ip_num)
 
     totalIpNum = zend_read_property(iplookup_ce,getThis(),"totalIpNum",sizeof("totalIpNum")-1,0 TSRMLS_CC);
 
-    RETVAL_LONG(Z_STRVAL_P(totalIpNum);
-    return;
+    RETURN_NULL();
+    //RETVAL_LONG(Z_STRVAL_P(totalIpNum);
+    //return;
     //RETURN_LONG(Z_STRVAL_P(totalIpNum);
 }
 
