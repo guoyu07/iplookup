@@ -62,12 +62,11 @@ extern zend_module_entry iplookup_module_entry;
 /*
   	Declare any global variables you may need between the BEGIN
 	and END macros here:
-
-ZEND_BEGIN_MODULE_GLOBALS(iplookup)
-	long  global_value;
-	char *global_string;
-ZEND_END_MODULE_GLOBALS(iplookup)
 */
+ZEND_BEGIN_MODULE_GLOBALS(iplookup)
+	char *qqwry_file;
+ZEND_END_MODULE_GLOBALS(iplookup)
+
 
 /* In every utility function you add that needs to use variables
    in php_iplookup_globals, call TSRMLS_FETCH(); after declaring other

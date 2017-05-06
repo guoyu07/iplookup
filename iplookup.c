@@ -30,6 +30,7 @@
 /* If you declare any globals in php_iplookup.h uncomment this:
 ZEND_DECLARE_MODULE_GLOBALS(iplookup)
 */
+ZEND_DECLARE_MODULE_GLOBALS(iplookup)
 
 /* True global resources - no need for thread safety here */
 static int le_iplookup;
@@ -38,12 +39,24 @@ zend_class_entry *iploop_ce;
 
 /* {{{ PHP_INI
  */
-/* Remove comments and fill if you need to have entries in php.ini
+Remove comments and fill if you need to have entries in php.ini
 PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("iplookup.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_iplookup_globals, iplookup_globals)
-    STD_PHP_INI_ENTRY("iplookup.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_iplookup_globals, iplookup_globals)
+    STD_PHP_INI_ENTRY("iplookup.qqwry_file",      "", PHP_INI_ALL, OnUpdateString, qqwry_file, zend_iplookup_globals, iplookup_globals)
+    //STD_PHP_INI_ENTRY("iplookup.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_iplookup_globals, iplookup_globals)
 PHP_INI_END()
-*/
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_iplookup___construct, 0, 0, 1)
+        ZEND_ARG_INFO(0, file)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_iplookup_get_index, 0, 0, 1)
+        ZEND_ARG_INFO(0, ip)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_iplookup_search_ip, 0, 0, 1)
+        ZEND_ARG_INFO(0, ip)
+ZEND_END_ARG_INFO()
+
 /* }}} */
 
 /* Remove the following function when you have successfully modified config.m4
@@ -61,8 +74,17 @@ ZEND_METHOD(IpLookUp,__construct)
 	zval *resource = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &file, &file_len) == FAILURE) {
-		return;
+		//如果没有传递参数 从配置文件中获取参数
+		file = IPLOOKUP_G(qqwry_file);
+		file_len = sizeof(file) - 1;
 	}
+
+	//判断是否有文件名
+	if(file == NULL)
+    {
+        php_error_docref(NULL TSRMLS_CC, E_WARNING, "file not configure");
+        return;
+    }
 
 	//判断文件是否存在 如果不存在下载最新的文件
 	if(! VCWD_ACCESS(file,F_OK) )
@@ -100,7 +122,7 @@ ZEND_METHOD(IpLookUp,__construct)
 	RETURN_NULL();
 }
 
-ZEND_METHOD(IpLookUp,totalIpNum)
+ZEND_METHOD(IpLookUp,total_ip_num)
 {
     long totalIpNum;
 
@@ -160,6 +182,14 @@ ZEND_METHOD(IplookUp,search_ip)
     RETURN_ZVAL(get_location(fp,ip),0,1);
 }
 
+ZEND_METHOD(IpLookUp,update_qqwry_file)
+{
+    zval *file;
+    file = zend_read_property(iploop_ce,getThis(),"file",sizeof("file")-1,0);
+
+    RETURN_LONG((long)update_qqwry_file(Z_STRVAL_P(file)));
+}
+
 ZEND_METHOD(IpLookUp,__destruct)
 {
     FILE *fp = NULL;
@@ -187,13 +217,12 @@ ZEND_METHOD(IpLookUp,__destruct)
 
 /* {{{ php_iplookup_init_globals
  */
-/* Uncomment this function if you have INI entries
+/* Uncomment this function if you have INI entries*/
 static void php_iplookup_init_globals(zend_iplookup_globals *iplookup_globals)
 {
-	iplookup_globals->global_value = 0;
-	iplookup_globals->global_string = NULL;
+	iplookup_globals->qqwry_file = NULL;
 }
-*/
+
 /* }}} */
 
 /* {{{ PHP_MINIT_FUNCTION
@@ -203,6 +232,16 @@ PHP_MINIT_FUNCTION(iplookup)
 	/* If you have INI entries, uncomment these lines
 	REGISTER_INI_ENTRIES();
 	*/
+	zend_class_entry ce;
+	INIT_CLASS_ENTRY(ce,"IpLookUp",iplookup_functions);
+	iploop_ce = zend_register_internal_class(&ce TSRMLS_CC);
+	myclass_ce = zend_register_internal_class(&ce TSRMLS_CC);
+
+	//注册文件资源
+	le_iplookup = zend_register_list_destructors_ex(NULL,NULL,"FILE",module_number);
+
+	REGISTER_INI_ENTRIES();
+
 	return SUCCESS;
 }
 /* }}} */
@@ -214,6 +253,7 @@ PHP_MSHUTDOWN_FUNCTION(iplookup)
 	/* uncomment this line if you have INI entries
 	UNREGISTER_INI_ENTRIES();
 	*/
+	UNREGISTER_INI_ENTRIES();
 	return SUCCESS;
 }
 /* }}} */
@@ -255,7 +295,12 @@ PHP_MINFO_FUNCTION(iplookup)
  * Every user visible function must have an entry in iplookup_functions[].
  */
 const zend_function_entry iplookup_functions[] = {
-	ZEND_ME(IpLookUp,__construct,	arginfo_iplookup__construct)		/* For testing, remove later. */
+	ZEND_ME(IpLookUp,__construct,	arginfo_iplookup___construct,ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)		/* For testing, remove later. */
+	ZEND-ME(IpLookUp,total_ip_num,NULL,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,get_index,arginfo_iplookup_get_index,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,search_ip,arginfo_iplookup_search_ip,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,update_qqwry_file,NULL,ZEND_ACC_PUBLIC)
+	ZEND_ME(IpLookUp,__destruct,NULL,ZEND_ACC_PUBLIC|ZEND_ACC_DTOR)
 	PHP_FE_END	/* Must be the last line in iplookup_functions[] */
 };
 /* }}} */
