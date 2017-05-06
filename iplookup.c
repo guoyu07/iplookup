@@ -512,8 +512,8 @@ zval *get_location(FILE *fp,const char * ip)
 
     //数组中添加元素
     //add_assoc_string(result,"all",string_merge);
-    add_assoc_string(result,"country",country);
-    add_assoc_string(result,"area",area);
+    add_assoc_string(result,"country",country,1);
+    add_assoc_string(result,"area",area,1);
 
     return result;
 }
