@@ -472,7 +472,7 @@ zval *get_location(php_stream *stream,const char * ip)
     }
     array_init(result);
 
-    if ( !stram ) {
+    if ( !stream ) {
         return 0;
     }
     php_stream_seek(stream,0,SEEK_SET);
