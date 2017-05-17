@@ -134,7 +134,7 @@ ZEND_METHOD(IpLookUp,total_ip_num)
     //RETURN_NULL();
     //RETVAL_LONG(Z_STRVAL_P(totalIpNum);
     //return;
-    RETURN_LONG(Z_STRVAL_P(totalIpNum);
+    RETURN_LONG(Z_STRVAL_P(totalIpNum));
 }
 
 ZEND_METHOD(IpLookUp,get_index)
