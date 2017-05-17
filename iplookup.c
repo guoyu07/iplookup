@@ -72,7 +72,7 @@ ZEND_METHOD(IpLookUp,__construct)
 {
 	char *file = NULL;
 	int file_len;
-	FILE *fp = NULL;
+	php_stream *stream;
 	zval *resource = NULL;
 
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &file, &file_len) == FAILURE) {
@@ -101,23 +101,23 @@ ZEND_METHOD(IpLookUp,__construct)
     zend_update_property_string(iplookup_ce,getThis(),"file",sizeof("file")-1,file TSRMLS_CC);
 
     //打开文件
-    fp = VCWD_FOPEN(file,"r");
+    stream = php_stream_open_wrapper(file, "r", NULL,NULL)(,"r");
     if(! fp)
     {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "file open failed: %s", file);
         RETURN_NULL();
     }
 
-    fseek(fp,0L,SEEK_SET);
+    php_stream_seek(stream,0L,SEEK_SET);
 
-    start_index_offset = get_index_offset(fp);
-    end_index_offset   = get_index_offset(fp);
+    start_index_offset = get_index_offset(stream);
+    end_index_offset   = get_index_offset(stream);
 
     total_ip_num = (start_index_offset - end_index_offset) / INDEX_LENGTH;
 
-    MAKE_STD_ZVAL(resource);
+    //MAKE_STD_ZVAL(resource);
     //保存资源到对象中
-    ZEND_REGISTER_RESOURCE(resource,fp,le_iplookup);
+    php_stream_to_zval(stream, resource);
     zend_update_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,resource TSRMLS_CC);
     zend_update_property_long(iplookup_ce,getThis(),"startIndexOffset",sizeof("startIndexOffset")-1,(long)start_index_offset TSRMLS_CC);
     zend_update_property_long(iplookup_ce,getThis(),"endIndexOffset",sizeof("endIndexOffset")-1,(long)end_index_offset TSRMLS_CC);
@@ -139,7 +139,7 @@ ZEND_METHOD(IpLookUp,total_ip_num)
 
 ZEND_METHOD(IpLookUp,get_index)
 {
-    FILE *fp = NULL;
+    php_stream *stream = NULL;
     char *ip;
     int ip_len;
     zval *resource;
@@ -151,7 +151,7 @@ ZEND_METHOD(IpLookUp,get_index)
 
     resource = zend_read_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,0 TSRMLS_CC);
 
-    ZEND_FETCH_RESOURCE(fp,FILE *,&resource,-1,"FILE",le_iplookup);
+    php_stream_from_zval(stream,&resource);
 
     if( ! fp)
     {
@@ -159,14 +159,14 @@ ZEND_METHOD(IpLookUp,get_index)
         RETURN_NULL();
     }
 
-    index = find_index(ip2long(ip),fp);
+    index = find_index(ip2long(ip),stream);
 
     RETURN_LONG((long)index);
 }
 
 ZEND_METHOD(IpLookUp,search_ip)
 {
-    FILE *fp = NULL;
+    php_stream *stream = NULL;
     char *ip;
     int ip_len;
     zval *resource;
@@ -177,7 +177,7 @@ ZEND_METHOD(IpLookUp,search_ip)
 
     resource = zend_read_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,0 TSRMLS_CC);
 
-    ZEND_FETCH_RESOURCE(fp,FILE *,&resource,-1,"FILE",le_iplookup);
+    php_stream_from_zval(stream,&resource);
 
     if( ! fp)
     {
@@ -332,11 +332,11 @@ zend_module_entry iplookup_module_entry = {
 };
 /* }}} */
 
-uint32_t get_index_offset(FILE *fp)
+uint32_t get_index_offset(php_stream *stream)
 {
     unsigned char head[4];
     size_t num;
-    num = fread(head,4,1,fp);
+    num = php_stream_read(stream,head,4);
 
     return (uint32_t)LE_32(&head[0]);
 }
