@@ -101,8 +101,8 @@ ZEND_METHOD(IpLookUp,__construct)
     zend_update_property_string(iplookup_ce,getThis(),"file",sizeof("file")-1,file TSRMLS_CC);
 
     //打开文件
-    stream = php_stream_open_wrapper(file, "r", NULL,NULL)(,"r");
-    if(! fp)
+    stream = php_stream_open_wrapper(file, "r", ENFORCE_SAFE_MODE | REPORT_ERRORS,NULL);
+    if(! stream)
     {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "file open failed: %s", file);
         RETURN_NULL();
@@ -153,7 +153,7 @@ ZEND_METHOD(IpLookUp,get_index)
 
     php_stream_from_zval(stream,&resource);
 
-    if( ! fp)
+    if( ! stream)
     {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "file resource not exists!");
         RETURN_NULL();
@@ -179,13 +179,13 @@ ZEND_METHOD(IpLookUp,search_ip)
 
     php_stream_from_zval(stream,&resource);
 
-    if( ! fp)
+    if( ! stream)
     {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "file resource not exists!");
         RETURN_NULL();
     }
 
-    RETURN_ZVAL(get_location(fp,ip),0,1);
+    RETURN_ZVAL(get_location(stream,ip),0,1);
 }
 
 ZEND_METHOD(IpLookUp,update_qqwry_file)
@@ -198,19 +198,19 @@ ZEND_METHOD(IpLookUp,update_qqwry_file)
 
 ZEND_METHOD(IpLookUp,__destruct)
 {
-    FILE *fp = NULL;
+    php_stream *stream = NULL;
     zval *resource;
     resource = zend_read_property(iplookup_ce,getThis(),"fp",sizeof("fp")-1,0 TSRMLS_CC);
 
-    ZEND_FETCH_RESOURCE(fp,FILE *,&resource,-1,"FILE",le_iplookup);
+    php_stream_from_zval(stream,&resource);
 
-    if( ! fp)
+    if( ! stream)
     {
         php_error_docref(NULL TSRMLS_CC, E_WARNING, "file resource not exists!");
         return;
     }
 
-    fclose(fp);
+    php_stream_close(stream);
     return;
 }
 /* }}} */
@@ -258,7 +258,7 @@ PHP_MINIT_FUNCTION(iplookup)
 	iplookup_ce = zend_register_internal_class(&ce TSRMLS_CC);
 
 	//注册文件资源
-	le_iplookup = zend_register_list_destructors_ex(NULL,NULL,"FILE",module_number);
+	//le_iplookup = zend_register_list_destructors_ex(NULL,NULL,"FILE",module_number);
 
 	//定义类属性
 	zend_declare_property_null(iplookup_ce,"fp",sizeof("fp")-1,ZEND_ACC_PUBLIC TSRMLS_CC);
@@ -373,7 +373,7 @@ uint32_t ip2long(const char *ip) {
     return ip_long;
 }
 
-uint32_t find_index(const uint32_t ip,FILE *fp) {
+uint32_t find_index(const uint32_t ip,php_stream *stream) {
     uint32_t index_ip;
     unsigned char index_bytes[7];
     uint32_t index_mid;
@@ -390,8 +390,8 @@ uint32_t find_index(const uint32_t ip,FILE *fp) {
             index_mid=(index_mid + 1) / 2;
         }
         index_mid = start_index_offset + index_mid * INDEX_LENGTH;
-        fseek(fp,index_mid,SEEK_SET);
-        num = fread(index_bytes,7,1,fp);
+        php_stream_seek(stream,index_mid,SEEK_SET);
+        num = php_stream_read(stream,index_bytes,7);
         index_ip=(uint32_t)LE_32(&index_bytes[0]);
         if (index_ip == ip) {
             break;
@@ -402,34 +402,34 @@ uint32_t find_index(const uint32_t ip,FILE *fp) {
         }
     }
     if (index_ip > ip) {
-        fseek(fp,start_index_offset,SEEK_SET);
-        num = fread(index_bytes,INDEX_LENGTH,1,fp);
+        php_stream_seek(stream,start_index_offset,SEEK_SET);
+        num = php_stream_read(stream,index_bytes,INDEX_LENGTH);
     }
     return (uint32_t)LE_24(&index_bytes[4]);
 }
 
-int find_location_by_index(FILE *fp,const uint32_t data_index,char *location)
+int find_location_by_index(php_stream *stream,const uint32_t data_index,char *location)
 {
     unsigned char c;
     unsigned char data_index_bytes[3];
     uint32_t jump_data_index=0;
     size_t num;
     if (data_index) {
-        fseek(fp,data_index,SEEK_SET);
+        php_stream_seek(stream,data_index,SEEK_SET);
     }
-    c=fgetc(fp);
+    c=php_stream_getc(stream);
     switch (c) {
         case REDIRECT_TYPE_2:
         case REDIRECT_TYPE_1:
-            num = fread(data_index_bytes,3,1,fp);
+            num = php_stream_read(stream,data_index_bytes,3);
             jump_data_index=LE_24(&data_index_bytes[0]);
-            fseek(fp,jump_data_index,SEEK_SET);
+            php_stream_seek(stream,jump_data_index,SEEK_SET);
             break;
         default:
             location[strlen(location)]=c;
     }
     if (c) {
-        while (c=fgetc(fp)) {
+        while (c=php_stream_getc(stream)) {
             location[strlen(location)]=c;
         }
     }
@@ -455,7 +455,7 @@ int is_cz88(const char *str) {
     return 0;
 }
 
-zval *get_location(FILE *fp,const char * ip)
+zval *get_location(php_stream *stream,const char * ip)
 {
     uint32_t ip_long;
     zval *result = (zval *)ecalloc(1,sizeof(zval));
@@ -472,21 +472,21 @@ zval *get_location(FILE *fp,const char * ip)
     }
     array_init(result);
 
-    if ( !fp ) {
+    if ( !stram ) {
         return 0;
     }
-    fseek(fp,0,SEEK_SET);
-    data_index = find_index(ip_long,fp);
+    php_stream_seek(stream,0,SEEK_SET);
+    data_index = find_index(ip_long,stream);
     //fprintf(stderr,"index:%u:%u\n",ftell(qqwry_file),data_index);
 
     /*ip 4 + mode byte 1*/
-    fseek(fp,data_index+4,SEEK_SET);
-    c = fgetc(fp);
+    php_stream_seek(stream,data_index+4,SEEK_SET);
+    c = php_stream_getc(stream);
     if (c == REDIRECT_TYPE_1) {
-        num = fread(data_index_bytes,3,1,fp);
+        num = php_stream_read(stream,data_index_bytes,3);
         data_index = LE_24(&data_index_bytes[0]);
-        fseek(fp,data_index,SEEK_SET);
-        c = fgetc(fp);
+        php_stream_seek(stream,data_index,SEEK_SET);
+        c = php_stream_getc(stream);
         /*制造一个假的4bytes位移，抵充ip*/
         data_index -= 4;
     }
@@ -497,20 +497,20 @@ zval *get_location(FILE *fp,const char * ip)
          * 这里ip的4个bytes不一定是真的，有可能是上一条注释里提到的情况
          */
         addr2_offset = data_index + 8;
-        num = fread(data_index_bytes,3,1,fp);
+        num = php_stream_read(stream,data_index_bytes,3);
 
         data_index = LE_24(&data_index_bytes[0]);
-        fseek(fp,data_index,SEEK_SET);
-        while (c = fgetc(fp)) {
+        php_stream_seek(stream,data_index,SEEK_SET);
+        while (c = php_stream_getc(stream)) {
             country[strlen(country)] = c;
         }
-        find_location_by_index(fp,addr2_offset,area);
+        find_location_by_index(stream,addr2_offset,area);
     } else {
         country[strlen(country)] = c;
-        while (c = fgetc(fp)) {
+        while (c = php_stream_getc(stream)) {
             country[strlen(country)] = c;
         }
-        find_location_by_index(fp,0,area);
+        find_location_by_index(stream,0,area);
     }
     if (is_cz88(country)) {
         country[0]='\0';
