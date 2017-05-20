@@ -335,8 +335,7 @@ zend_module_entry iplookup_module_entry = {
 uint32_t get_index_offset(php_stream *stream)
 {
     unsigned char head[4];
-    size_t num;
-    num = php_stream_read(stream,head,4);
+    php_stream_read(stream,head,4);
 
     return (uint32_t)LE_32(&head[0]);
 }
