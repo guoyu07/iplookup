@@ -376,7 +376,6 @@ uint32_t find_index(const uint32_t ip,php_stream *stream) {
     uint32_t index_ip;
     unsigned char index_bytes[7];
     uint32_t index_mid;
-    size_t num;
     while (1){
         if ((end_index_offset - start_index_offset) == INDEX_LENGTH) {
             break;
@@ -390,7 +389,7 @@ uint32_t find_index(const uint32_t ip,php_stream *stream) {
         }
         index_mid = start_index_offset + index_mid * INDEX_LENGTH;
         php_stream_seek(stream,index_mid,SEEK_SET);
-        num = php_stream_read(stream,index_bytes,7);
+        php_stream_read(stream,index_bytes,7);
         index_ip=(uint32_t)LE_32(&index_bytes[0]);
         if (index_ip == ip) {
             break;
@@ -402,7 +401,7 @@ uint32_t find_index(const uint32_t ip,php_stream *stream) {
     }
     if (index_ip > ip) {
         php_stream_seek(stream,start_index_offset,SEEK_SET);
-        num = php_stream_read(stream,index_bytes,INDEX_LENGTH);
+        php_stream_read(stream,index_bytes,INDEX_LENGTH);
     }
     return (uint32_t)LE_24(&index_bytes[4]);
 }
@@ -412,7 +411,6 @@ int find_location_by_index(php_stream *stream,const uint32_t data_index,char *lo
     unsigned char c;
     unsigned char data_index_bytes[3];
     uint32_t jump_data_index=0;
-    size_t num;
     if (data_index) {
         php_stream_seek(stream,data_index,SEEK_SET);
     }
@@ -420,7 +418,7 @@ int find_location_by_index(php_stream *stream,const uint32_t data_index,char *lo
     switch (c) {
         case REDIRECT_TYPE_2:
         case REDIRECT_TYPE_1:
-            num = php_stream_read(stream,data_index_bytes,3);
+            php_stream_read(stream,data_index_bytes,3);
             jump_data_index=LE_24(&data_index_bytes[0]);
             php_stream_seek(stream,jump_data_index,SEEK_SET);
             break;
@@ -463,7 +461,6 @@ zval *get_location(php_stream *stream,const char * ip)
     uint32_t addr2_offset;
     char country[CHAR_NUM],area[CHAR_NUM];
     unsigned char c;
-    size_t num;
 
     ip_long = ip2long(ip);
     if(result == NULL){
@@ -482,7 +479,7 @@ zval *get_location(php_stream *stream,const char * ip)
     php_stream_seek(stream,data_index+4,SEEK_SET);
     c = php_stream_getc(stream);
     if (c == REDIRECT_TYPE_1) {
-        num = php_stream_read(stream,data_index_bytes,3);
+        php_stream_read(stream,data_index_bytes,3);
         data_index = LE_24(&data_index_bytes[0]);
         php_stream_seek(stream,data_index,SEEK_SET);
         c = php_stream_getc(stream);
@@ -496,7 +493,7 @@ zval *get_location(php_stream *stream,const char * ip)
          * 这里ip的4个bytes不一定是真的，有可能是上一条注释里提到的情况
          */
         addr2_offset = data_index + 8;
-        num = php_stream_read(stream,data_index_bytes,3);
+        php_stream_read(stream,data_index_bytes,3);
 
         data_index = LE_24(&data_index_bytes[0]);
         php_stream_seek(stream,data_index,SEEK_SET);
