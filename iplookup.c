@@ -35,7 +35,8 @@ ZEND_DECLARE_MODULE_GLOBALS(iplookup)
 /* True global resources - no need for thread safety here */
 static int le_iplookup;
 
-static uint32_t start_index_offset,end_index_offset,total_ip_num;
+static uint32_t start_index_offset,end_index_offset;
+static long total_ip_num;
 
 zend_class_entry *iplookup_ce;
 
